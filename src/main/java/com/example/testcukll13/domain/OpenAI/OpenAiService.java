@@ -12,6 +12,8 @@ import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 
+import java.util.ArrayList;
+
 @Service // ✅ 이 클래스가 Spring의 서비스(비즈니스 로직 담당)임을 나타냄
 @RequiredArgsConstructor
 public class OpenAiService {
@@ -33,17 +35,36 @@ public class OpenAiService {
      * @param userMessage 사용자가 보내는 메시지
      * @return ChatGPT의 응답 텍스트
      */
+    // 1. 메시지 리스트 생성
+    List<Map<String, String>> messages = new ArrayList<>();
+
     public String askChatGPT(String userMessage) {
+
+
+        // 2. system 메시지 추가
+        messages.add(Map.of(
+                "role", "system",
+                "content", "대기질 예보 정보를 바탕으로 지금 나에게 어울리는 행동 제안을 짧고 자연스럽게 한 문장으로 질문해줘. 매번 새롭게."
+        ));
+
+        // 3. user 메시지 추가
+        messages.add(Map.of(
+                "role", "user",
+                "content", userMessage
+        ));
+
         // ✅ 1. OpenAI Chat API 주소 (정해진 형식)
         String url = "https://api.openai.com/v1/chat/completions";
 
         // ✅ 2. 요청 메시지 구성 (OpenAI가 요구하는 구조)
         OpenAiRequestDto request = new OpenAiRequestDto(
                 "gpt-3.5-turbo",  // 사용 모델 이름: gpt-3.5-turbo 또는 gpt-4o
-                List.of(Map.of("role", "user", "content", userMessage)), // ✅ 필수 포맷: role + content
+                //List.of(Map.of("role", "user", "content", userMessage)), // ✅ 필수 포맷: role + content
+                messages,
                 0.7, // 생성 다양성 조절 (0 ~ 1, 높을수록 창의적)
-                50
+                70
         );
+
 
         // ✅ 3. HTTP 헤더 구성
         HttpHeaders headers = new HttpHeaders();
